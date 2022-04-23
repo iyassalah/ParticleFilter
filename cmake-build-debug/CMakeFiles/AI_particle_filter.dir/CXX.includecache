@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/Helpers.h
+cmath
+-
+iostream
+-
+vector
+-
+Particle.h
+C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/Particle.h
+
+C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/Particle.h
+
+C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/main.cpp
+iostream
+-
+vector
+-
+cmath
+-
+Particle.h
+C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/Particle.h
+Helpers.h
+C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/Helpers.h
+

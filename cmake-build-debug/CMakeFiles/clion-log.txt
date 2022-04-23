@@ -1,0 +1,4 @@
+"C:\Program Files\JetBrains\CLion 2020.1.1\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" C:\Users\iyasgamer01\CLionProjects\AI_particle_filter
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/iyasgamer01/CLionProjects/AI_particle_filter/cmake-build-debug
