@@ -16,15 +16,15 @@ using namespace std;
 
 
 
-double calculateStandardDeviation(vector<double> reads, double mean) {
+double calculateStandardDeviation(vector<double> reads, double mean, int len) {
     double sum = 0;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < len; i++) {
         sum += pow(reads[i] - mean, 2);
     }
-    return sqrt(sum / 1000);
+    return sqrt(sum / len);
 }
 
-double getPositionsRead(vector<double> &positions) {
+double getPositionsRead(vector<double> &positions, int len) {
     double sum = 0;
     int j = 0;
     for (double i = 0; i < 1; i += 0.001) {
@@ -32,24 +32,24 @@ double getPositionsRead(vector<double> &positions) {
         sum += positions[j];
         j++;
     }
-    return  sum / 1000;
+    return  sum / len;
 }
 
 void getInitialDistribution(vector<Particle> &particles, int skipDis, int numOfParticles) {
     int curPos = 0;
     for (int i = 0; i < numOfParticles; i++) {
-        Particle temp = Particle((double)1 / 50, curPos);
+        Particle temp = Particle((double)1 / numOfParticles, curPos);
         particles.push_back(temp);
         curPos += skipDis;
     }
 }
 
-Robot createRobot(vector<double>reads) {
+Robot createRobot(vector<double>reads, int len) {
     while (true) {
         cout << "Please enter the initial position of the Robot (must be between 1 and 1000) : ";
         int pos;
         cin >> pos;
-        if (pos >= 1 and pos <= 1000) {
+        if (pos >= 1 and pos <= len) {
             return Robot(pos, reads);
         }
         else {
@@ -89,15 +89,45 @@ void calcNewWeights(vector<Particle> &particles, vector<double>posRead, Robot ro
     }
 }
 
-void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &positionsRead, double mean, double standardDeviation) {
+int discreteDis(int numberOfParticle, vector<Particle> particles) {
+    vector<long long>dis(numberOfParticle);
+    for (int i = 0; i < particles.size(); i++) {
+        dis[i] = (particles[i].getWeight() * 1000000);
+    }
+
+    discrete_distribution<long long> distribution(dis.begin(), dis.end());
+
+    //list to store new particles after resampling
+    vector<Particle> newParticles(numberOfParticle);
+
+    //generate new particles with discrete distribution
+    std::default_random_engine generator;
+
+    return distribution(generator);
+}
+
+void normalize(vector<Particle> &particles, double sum) {
+    for (int i = 0; i < particles.size(); i++) {
+        particles[i].setWeight(particles[i].getWeight() / sum);
+    }
+}
+
+double updateAndGetSum(vector<Particle>&particles, vector<double> &positionsRead, double mean, double standardDeviation) {
+    double sum = 0;
+    for (int i = 0; i < particles.size(); i++) {
+        particles[i].setPosition(particles[i].getPosition() + 1);
+        double newWeight = weight((positionsRead[i] - positionsRead[particles[i].getPosition()]), mean, standardDeviation);
+        particles[i].setWeight(newWeight);
+        sum += particles[i].getWeight();
+    }
+    return sum;
+}
+
+void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &positionsRead, double mean, double standardDeviation, int len, int numberOfParticle) {
     bool turn = true;
 
     while (true) {
-//        cout << robot.getRobotPosition() << endl;
-        /*for (int i = 0; i < particles.size(); i++) {
-            cout << particles[i].getWeight() << endl;
-        }*/
-        if (turn and robot.getRobotPosition() + 1 > 1000) {
+        if (turn and robot.getRobotPosition() + 1 >= len) {
             turn = false;
         } else if (!turn and robot.getRobotPosition() - 1 < 1) {
             turn = true;
@@ -111,18 +141,12 @@ void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &p
         //move particles 1 step
         int sum = 0;
         for (int i = 0; i < particles.size(); i++) {
-            if (turn and particles[i].getPosition() + 1 > 1000) {
-                Particle temp = new Particle();
-                temp.setPosition(generateRandom(999));
-                temp.setWeight(weight((positionsRead[i] - positionsRead[temp.getPosition()]), mean, standardDeviation));
-                sum += temp.getWeight();
-                particles[i] = temp;
+            if (turn and particles[i].getPosition() + 1 > len) {
+                int index = discreteDis(numberOfParticle, particles);
+                particles[i] = particles[index];
             } else if (!turn and particles[i].getPosition() - 1 < 1) {
-                Particle temp = new Particle();
-                temp.setPosition(generateRandom(999));
-                temp.setWeight(weight((positionsRead[i] - positionsRead[temp.getPosition()]), mean, standardDeviation));
-                sum += temp.getWeight();
-                particles[i] = temp;
+                int index = discreteDis(numberOfParticle, particles);
+                particles[i] = particles[index];
             } else {
                 if (turn) {
                     particles[i].setPosition(particles[i].getPosition() + 1);
@@ -130,17 +154,13 @@ void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &p
                     particles[i].setPosition(particles[i].getPosition() - 1);
                 }
             }
-            double newWeight = weight((positionsRead[i] - positionsRead[particles[i].getPosition()]), mean, standardDeviation);
-            particles[i].setWeight(newWeight);
-            sum += particles[i].getWeight();
         }
 
+        sum = updateAndGetSum(particles, positionsRead, mean, standardDeviation);
         //normalize the weights after moving
-        for (int i = 0; i < particles.size(); i++) {
-            particles[i].setWeight(particles[i].getWeight() / sum);
-        }
+        normalize(particles, sum);
 
-        vector<long long>dis(50);
+        vector<long long>dis(numberOfParticle);
         for (int i = 0; i < particles.size(); i++) {
             dis[i] = (particles[i].getWeight() * 1000000);
         }
@@ -148,7 +168,7 @@ void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &p
         discrete_distribution<long long> distribution(dis.begin(), dis.end());
 
         //list to store new particles after resampling
-        vector<Particle> newParticles(50);
+        vector<Particle> newParticles(numberOfParticle);
 
         //generate new particles with discrete distribution
         std::default_random_engine generator;
@@ -163,25 +183,19 @@ void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &p
         for (int i = 0; i < particles.size(); i++) {
             uniquePos.insert(particles[i].getPosition());
         }
-        cout << uniquePos.size() << endl;
 
+    // if all particle are placed in one position, this mean the robot in this position
         if (uniquePos.size() == 1) {
-            cout << "The robot is in index " << *uniquePos.begin() << endl;
+            cout << endl;
+            cout << "The robot is in index " << robot.getRobotPosition() << endl;
             return;
         }
 
         //Update weights after resampling
-        sum = 0;
-        for (int i = 0; i < particles.size(); i++) {
-            particles[i].setPosition(particles[i].getPosition() + 1);
-            double newWeight = weight((positionsRead[i] - positionsRead[particles[i].getPosition()]), mean, standardDeviation);
-            particles[i].setWeight(newWeight);
-            sum += particles[i].getWeight();
-        }
+        sum = updateAndGetSum(particles, positionsRead, mean, standardDeviation);
+
         //normalize the weights after moving
-        for (int i = 0; i < particles.size(); i++) {
-            particles[i].setWeight(particles[i].getWeight() / sum);
-        }
+        normalize(particles, sum);
     }
 }
 

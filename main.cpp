@@ -1,3 +1,14 @@
+
+
+/// PARTICLE FILTER
+
+
+/// work done by
+/// IYAS SALAH      ID: 191034
+///BASEL EBIDO      ID: 191039
+
+
+
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -20,9 +31,9 @@ int main() {
     vector<double> positionsRead(CORRIDOR_LENGTH, 0);
 
     //calculate the mean value for all positions
-    double mean = getPositionsRead(positionsRead);
+    double mean = getPositionsRead(positionsRead, CORRIDOR_LENGTH);
 
-    double standardDeviation = calculateStandardDeviation(positionsRead, mean);
+    double standardDeviation = calculateStandardDeviation(positionsRead, mean, CORRIDOR_LENGTH);
 
     //skip distance determine the initial distance between the particle in the first distribution
     int skipDistance = CORRIDOR_LENGTH / PARTICLES_NUMBER;
@@ -31,12 +42,8 @@ int main() {
     getInitialDistribution(particles, skipDistance, PARTICLES_NUMBER);
 
     //return a robot with start position read from console
-    Robot robot = createRobot(positionsRead);
+    Robot robot = createRobot(positionsRead, CORRIDOR_LENGTH);
 
-    ///Resampling particles
-    calcNewWeights(particles, positionsRead, robot, mean, standardDeviation);
-
-    moveInCorridor(robot, particles, positionsRead, mean, standardDeviation);
-    cout << 1 << endl;
+    moveInCorridor(robot, particles, positionsRead, mean, standardDeviation, CORRIDOR_LENGTH, PARTICLES_NUMBER);
     return 0;
 }
