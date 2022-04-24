@@ -5,9 +5,15 @@
 
 class Sensor {
 public:
+    Sensor() {
 
+    }
+
+    Sensor(std::vector<double> posReads) {
+        this->reads = posReads;
+    }
 private:
-
+    std::vector<double> reads;
 };
 
 

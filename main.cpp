@@ -11,6 +11,7 @@ using namespace std;
 int main() {
     const int PARTICLES_NUMBER = 50;
     const int CORRIDOR_LENGTH = 1000;
+
     //list of particles
     vector<Particle> particles;
 
@@ -29,8 +30,11 @@ int main() {
     // function that gives all particles the first position with fixed distance between each other
     getInitialDistribution(particles, skipDistance, PARTICLES_NUMBER);
 
-    //define a Robot instance
-    Robot robot = new Robot();
+    //return a robot with start position read from console
+    Robot robot = createRobot(positionsRead);
+
+    ///Resampling particles
+    calcNewWeights(particles, positionsRead, robot, mean, standardDeviation);
 
 
 
