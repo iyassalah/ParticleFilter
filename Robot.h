@@ -21,8 +21,8 @@ public:
 
     }
 
-    void move() {
-        this->position++;
+    void move(int val) {
+        this->position += val;
     }
 
     int getRobotPosition() {

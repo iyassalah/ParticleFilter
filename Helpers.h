@@ -5,6 +5,10 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <random>
+#include <functional>
+#include <random>
+#include <set>
 
 #include "Particle.h"
 #include "Robot.h"
@@ -28,7 +32,7 @@ double getPositionsRead(vector<double> &positions) {
         sum += positions[j];
         j++;
     }
-    return  sqrt(sum / 1000);
+    return  sum / 1000;
 }
 
 void getInitialDistribution(vector<Particle> &particles, int skipDis, int numOfParticles) {
@@ -82,6 +86,102 @@ void calcNewWeights(vector<Particle> &particles, vector<double>posRead, Robot ro
 
         //replace the old particles with new ones
         particles[i] = newParicles[i];
+    }
+}
+
+void moveInCorridor(Robot &robot, vector<Particle> &particles, vector<double> &positionsRead, double mean, double standardDeviation) {
+    bool turn = true;
+
+    while (true) {
+//        cout << robot.getRobotPosition() << endl;
+        /*for (int i = 0; i < particles.size(); i++) {
+            cout << particles[i].getWeight() << endl;
+        }*/
+        if (turn and robot.getRobotPosition() + 1 > 1000) {
+            turn = false;
+        } else if (!turn and robot.getRobotPosition() - 1 < 1) {
+            turn = true;
+        }
+        if (turn) {
+            robot.move(1);
+        } else {
+            robot.move(-1);
+        }
+
+        //move particles 1 step
+        int sum = 0;
+        for (int i = 0; i < particles.size(); i++) {
+            if (turn and particles[i].getPosition() + 1 > 1000) {
+                Particle temp = new Particle();
+                temp.setPosition(generateRandom(999));
+                temp.setWeight(weight((positionsRead[i] - positionsRead[temp.getPosition()]), mean, standardDeviation));
+                sum += temp.getWeight();
+                particles[i] = temp;
+            } else if (!turn and particles[i].getPosition() - 1 < 1) {
+                Particle temp = new Particle();
+                temp.setPosition(generateRandom(999));
+                temp.setWeight(weight((positionsRead[i] - positionsRead[temp.getPosition()]), mean, standardDeviation));
+                sum += temp.getWeight();
+                particles[i] = temp;
+            } else {
+                if (turn) {
+                    particles[i].setPosition(particles[i].getPosition() + 1);
+                } else {
+                    particles[i].setPosition(particles[i].getPosition() - 1);
+                }
+            }
+            double newWeight = weight((positionsRead[i] - positionsRead[particles[i].getPosition()]), mean, standardDeviation);
+            particles[i].setWeight(newWeight);
+            sum += particles[i].getWeight();
+        }
+
+        //normalize the weights after moving
+        for (int i = 0; i < particles.size(); i++) {
+            particles[i].setWeight(particles[i].getWeight() / sum);
+        }
+
+        vector<long long>dis(50);
+        for (int i = 0; i < particles.size(); i++) {
+            dis[i] = (particles[i].getWeight() * 1000000);
+        }
+
+        discrete_distribution<long long> distribution(dis.begin(), dis.end());
+
+        //list to store new particles after resampling
+        vector<Particle> newParticles(50);
+
+        //generate new particles with discrete distribution
+        std::default_random_engine generator;
+        for (int i = 0; i < particles.size(); i++) {
+            int index = distribution(generator);
+            newParticles[i] = particles[i];
+        }
+
+        particles = newParticles;
+        set<int> uniquePos;
+
+        for (int i = 0; i < particles.size(); i++) {
+            uniquePos.insert(particles[i].getPosition());
+        }
+        cout << uniquePos.size() << endl;
+
+        if (uniquePos.size() == 1) {
+            cout << "The robot is in index " << *uniquePos.begin() << endl;
+            return;
+        }
+
+        //Update weights after resampling
+        sum = 0;
+        for (int i = 0; i < particles.size(); i++) {
+            particles[i].setPosition(particles[i].getPosition() + 1);
+            double newWeight = weight((positionsRead[i] - positionsRead[particles[i].getPosition()]), mean, standardDeviation);
+            particles[i].setWeight(newWeight);
+            sum += particles[i].getWeight();
+        }
+        //normalize the weights after moving
+        for (int i = 0; i < particles.size(); i++) {
+            particles[i].setWeight(particles[i].getWeight() / sum);
+        }
     }
 }
 

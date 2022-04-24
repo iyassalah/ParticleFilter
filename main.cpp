@@ -12,7 +12,7 @@ int main() {
     const int PARTICLES_NUMBER = 50;
     const int CORRIDOR_LENGTH = 1000;
 
-    //list of particles
+    //list of parti[
     vector<Particle> particles;
 
 
@@ -36,7 +36,7 @@ int main() {
     ///Resampling particles
     calcNewWeights(particles, positionsRead, robot, mean, standardDeviation);
 
-
-
+    moveInCorridor(robot, particles, positionsRead, mean, standardDeviation);
+    cout << 1 << endl;
     return 0;
 }
