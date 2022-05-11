@@ -1,11 +1,9 @@
 
-
 /// PARTICLE FILTER
-
 
 /// work done by
 /// IYAS SALAH      ID: 191034
-///BASEL EBIDO      ID: 191039
+/// BASEL EBIDO      ID: 191039
 
 
 
@@ -23,9 +21,8 @@ int main() {
     const int PARTICLES_NUMBER = 50;
     const int CORRIDOR_LENGTH = 1000;
 
-    //list of parti[
+    //list of particle
     vector<Particle> particles;
-
 
     //list of size 100 that holds the sensor read for each position in the corridor
     vector<double> positionsRead(CORRIDOR_LENGTH, 0);
@@ -33,6 +30,7 @@ int main() {
     //calculate the mean value for all positions
     double mean = getPositionsRead(positionsRead, CORRIDOR_LENGTH);
 
+    //calculate standard deviation
     double standardDeviation = calculateStandardDeviation(positionsRead, mean, CORRIDOR_LENGTH);
 
     //skip distance determine the initial distance between the particle in the first distribution
@@ -44,6 +42,14 @@ int main() {
     //return a robot with start position read from console
     Robot robot = createRobot(positionsRead, CORRIDOR_LENGTH);
 
+    //calculate the initial weight for particles after initial distribution.
+    calcNewWeights(particles, positionsRead, robot, mean, standardDeviation);
+
+    /*for (auto x : particles) {
+        cout << x.getPosition() << ' ' << x.getWeight() << ' ' << (x.isDir() ? "true" : "false") << endl;
+    }*/
+
     moveInCorridor(robot, particles, positionsRead, mean, standardDeviation, CORRIDOR_LENGTH, PARTICLES_NUMBER);
+
     return 0;
 }

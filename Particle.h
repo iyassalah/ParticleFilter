@@ -12,6 +12,7 @@ public:
     }
 
     Particle() {
+        this->dir = true;
     }
 
     Particle(Particle *pParticle) {
@@ -34,6 +35,14 @@ public:
         return this->position;
     }
 
+    bool isDir() const {
+        return dir;
+    }
+
+    void setDir(bool dir) {
+        Particle::dir = dir;
+    }
+
     /*Particle &operator=(Particle &P) {
         setWeight(P.getWeight());
         setPosition(P.getPosition());
@@ -44,6 +53,7 @@ public:
 private:
     double weight;
     int position;
+    bool dir;
 };
 
 
